@@ -184,14 +184,11 @@
 
     <%# Hiding this Admin Actions panel until Flag User, Unpublish All Posts and Suspend User are moved into it  %>
     <% if current_user.any_admin? %>
-      <button aria-haspopup="true" aria-expanded="false" aria-controls="admin-action-options" class="other-things-btn admin-action hidden" type="button" data-other-things-type="admin-action" aria-label="<%= t("views.moderations.actions.admin.aria_label") %>">
+      <button aria-haspopup="true" aria-expanded="false" aria-controls="admin-action-options" class="other-things-btn admin-action" type="button" data-other-things-type="admin-action" aria-label="<%= t("views.moderations.actions.moderator.aria_label") %>">
         <div class="label-wrapper">
-          <div class="icon circle centered-icon">
-            <%= inline_svg_tag("admin.svg", aria_hidden: true, title: t("views.moderations.actions.admin.icon")) %>
-          </div>
           <header>
-            <h2><%= t("views.moderations.actions.admin.heading") %></h2>
-            <h3><%= t("views.moderations.actions.admin.subtitle") %></h3>
+            <h2><%= t("views.moderations.actions.moderator.heading", user: @moderatable.user.name) %></h2>
+            <h3><%= t("views.moderations.actions.moderator.subtitle", user: @moderatable.user.name) %></h3>
           </header>
         </div>
         <div class="toggle-chevron-container">

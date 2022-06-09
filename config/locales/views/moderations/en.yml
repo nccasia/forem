@@ -53,11 +53,11 @@ en:
             Expert: Expert
             Mid-level: Mid-level
             Novice: Novice
-        admin:
-          heading: Admin actions
-          heading2: Higher permission post options
-          subtitle: Higher permission post options
-          aria_label: Open admin actions
+        moderator:
+          heading: Moderator actions
+          heading2: "Moderating actions to %{user}"
+          subtitle: "Moderating actions to %{user}"
+          aria_label: Open moderator actions
           icon: Crown
         flag: Flag user
         how: How does this work?
