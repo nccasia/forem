@@ -145,7 +145,8 @@ class ArticlePolicy < ApplicationPolicy
   end
 
   # this method performs the same checks that determine
-  # if the record can be featured
+  # if the record can be featured and
+  # if moderator actions are accessible
   def revoke_publication?
     require_user!
     return false unless @record.published?
@@ -177,6 +178,8 @@ class ArticlePolicy < ApplicationPolicy
   alias admin_featured_toggle? revoke_publication?
 
   alias toggle_featured_status? revoke_publication?
+
+  alias can_access_moderator_actions? revoke_publication?
 
   # Due to the associated controller method "admin_unpublish", we
   # alias "admin_ubpublish" to the "revoke_publication" method.

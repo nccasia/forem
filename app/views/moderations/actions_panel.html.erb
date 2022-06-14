@@ -182,8 +182,7 @@
       </a>
     </div>
 
-    <%# Hiding this Admin Actions panel until Flag User, Unpublish All Posts and Suspend User are moved into it  %>
-    <% if current_user.any_admin? %>
+    <% if policy(@moderatable).can_access_moderator_actions? %>
       <button aria-haspopup="true" aria-expanded="false" aria-controls="admin-action-options" class="other-things-btn admin-action" type="button" data-other-things-type="admin-action" aria-label="<%= t("views.moderations.actions.moderator.aria_label") %>">
         <div class="label-wrapper">
           <div class="icon circle centered-icon">
@@ -200,17 +199,9 @@
       </button>
 
       <div id="admin-action-options" class="admin-action-options dropdown-options hidden">
-         <div class="article-admin-action">
-           <button
-             class="c-btn c-btn--primary c-btn--destructive w-100"
-             id="unpublish-article-btn"
-             data-article-id="<%= @moderatable.id %>"
-             data-article-author="<%= @moderatable.username %>"
-             data-article-slug="<%= @moderatable.slug %>">
-             <%= t("views.moderations.actions.unpublish") %>
-           </button>
-         </div>
-       </div>
+        <div class="article-admin-action">
+        </div>
+      </div>
     <% end %>
   </div>
 
