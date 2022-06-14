@@ -7,6 +7,7 @@
 <% end %>
 
 <%= javascript_packs_with_chunks_tag "actionsPanel", defer: true %>
+<%= javascript_packs_with_chunks_tag "admin/editUser", defer: true %>
 
 <div class="container mod-container">
   <header class="top-header">
@@ -200,6 +201,13 @@
 
       <div id="admin-action-options" class="admin-action-options dropdown-options hidden">
         <div class="article-admin-action">
+            <button type="button"
+              class="c-btn c-btn--destructive align-left"
+              data-modal-title="Unpublish all posts"
+              data-modal-size="small"
+              data-modal-content-selector="#unpublish-all-posts"
+              data-form-action="<%= unpublish_all_articles_admin_user_path(@moderatable.user) %>"
+              data-user-name="<%= @moderatable.username %>">Unpublish all posts of <%= @moderatable.username %></button>
         </div>
       </div>
     <% end %>
@@ -208,4 +216,8 @@
   <div class="bottom-actions">
     <button id="open-flag-user-modal" type="button"><%= t("views.moderations.actions.flag") %></button>
   </div>
+</div>
+
+<div class="hidden">
+  <%= render "admin/users/modals/unpublish_modal" %>
 </div>
