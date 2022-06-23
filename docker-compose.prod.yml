@@ -23,6 +23,8 @@ services:
       RACK_TIMEOUT_SERVICE_TIMEOUT: 10000
       STATEMENT_TIMEOUT: 10000
       APP_DOMAIN: ${APP_DOMAIN}
+      SECRET_KEY_BASE: dummydummydummy
+      FOREM_OWNER_SECRET: secretsecretsecret
     tmpfs:
       - /tmp
     volumes:
