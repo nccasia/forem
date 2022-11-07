@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import PropTypes from 'prop-types';
-import { useState } from 'preact/hooks';
+import { useState, useLayoutEffect, useEffect } from 'preact/hooks';
 import 'react-dates/initialize';
 import moment from 'moment';
 import { DateRangePicker as ReactDateRangePicker } from 'react-dates';
@@ -24,6 +24,12 @@ const PICKER_PHRASES = {
   chooseAvailableStartDate: ({ date }) => `Choose ${date} as start date`,
   chooseAvailableEndDate: ({ date }) => `Choose ${date} as end date`,
   focusStartDate: 'Interact with the calendar and add your start date',
+  invalidDateFormat: (format, errorPrefix) =>
+    `${errorPrefix} must be in the format ${format}`,
+  dateTooLate: (latestDate, errorPrefix) =>
+    `${errorPrefix} must be on or before ${latestDate}`,
+  dateTooEarly: (earliestDate, errorPrefix) =>
+    `${errorPrefix} must be on or after ${earliestDate}`,
 };
 
 const MONTH_NAMES = [...Array(12).keys()].map((key) =>
@@ -153,6 +159,87 @@ const PresetDateRangeOptions = ({
 };
 
 /**
+ * Hook that will attach listeners to date range inputs and return the correct error message for each.
+ * @param {Object} props
+ * @param {Object} props.earliesMoment Moment object reflecting the earliest date that may be selected
+ * @param {Object} props.latestMoment Moment object reflecting the latest date that may be selected
+ * @param {string} props.dateFormat The expected date format, e.g. "MM/DD/YYYY"
+ */
+const useDateRangeValidation = ({
+  earliestMoment,
+  latestMoment,
+  dateFormat,
+}) => {
+  const [startDateInput, setStartDateInput] = useState(null);
+  const [endDateInput, setEndDateInput] = useState(null);
+  const [startDateError, setStartDateError] = useState('');
+  const [endDateError, setEndDateError] = useState('');
+
+  useEffect(() => {
+    const setError = (error, inputType) =>
+      inputType === 'start'
+        ? setStartDateError(error ?? '')
+        : setEndDateError(error ?? '');
+
+    const handleBlur = ({ target: { value } }, inputType) => {
+      if (value === '') {
+        setError('', inputType);
+        return;
+      }
+
+      const errorPrefix = `${inputType === 'start' ? 'Start' : 'End'} date`;
+
+      const valueMoment = moment(value, dateFormat);
+      if (!valueMoment.isValid()) {
+        setError(
+          PICKER_PHRASES.invalidDateFormat(dateFormat, errorPrefix),
+          inputType,
+        );
+        return;
+      }
+
+      if (valueMoment.isBefore(earliestMoment)) {
+        setError(
+          PICKER_PHRASES.dateTooEarly(
+            earliestMoment.format(dateFormat),
+            errorPrefix,
+          ),
+          inputType,
+        );
+        return;
+      }
+
+      if (valueMoment.isAfter(latestMoment)) {
+        setError(
+          PICKER_PHRASES.dateTooLate(
+            latestMoment.format(dateFormat),
+            errorPrefix,
+          ),
+          inputType,
+        );
+        return;
+      }
+
+      // Date is valid
+      setError('', inputType);
+    };
+
+    const handleStartBlur = (e) => handleBlur(e, 'start');
+    const handleEndBlur = (e) => handleBlur(e, 'end');
+
+    startDateInput?.addEventListener('blur', handleStartBlur);
+    endDateInput?.addEventListener('blur', handleEndBlur);
+
+    return () => {
+      startDateInput?.removeEventListener('blur', handleStartBlur);
+      endDateInput?.removeEventListener('blur', handleEndBlur);
+    };
+  }, [startDateInput, endDateInput, dateFormat, earliestMoment, latestMoment]);
+
+  return { setStartDateInput, setEndDateInput, startDateError, endDateError };
+};
+
+/**
  * Used to facilitate picking a date range. This component is a wrapper around the one provided from react-dates.
  *
  * @param {Object} props
@@ -164,6 +251,8 @@ const PresetDateRangeOptions = ({
  * @param {Date} props.minStartDate The oldest date that may be selected
  * @param {Function} props.onDatesChanged Callback function for when dates are selected. Receives an object with startDate and endDate values.
  * @param {[string]} props.presetRanges Quick-select preset date ranges to offer in the calendar. These will only be shown if they fall within the min and max dates.
+ * @param {string} props.startDateAriaLabel Custom aria-label for start date input
+ * @param {string} props.endDateAriaLabel Custom aria-label for end date input
  * @param {Date} props.todaysDate Optional param to pass in today's Date, primarily for testing purposes
  */
 export const DateRangePicker = ({
@@ -175,6 +264,8 @@ export const DateRangePicker = ({
   minStartDate = new Date(),
   onDatesChanged,
   presetRanges = [],
+  startDateAriaLabel,
+  endDateAriaLabel,
   todaysDate = new Date(),
 }) => {
   const [focusedInput, setFocusedInput] = useState(START_DATE);
@@ -185,6 +276,9 @@ export const DateRangePicker = ({
   const [endMoment, setEndMoment] = useState(
     defaultEndDate ? moment(defaultEndDate) : null,
   );
+
+  const dateFormat =
+    getCurrentLocale().toLowerCase() === 'en-us' ? 'MM/DD/YYYY' : 'DD/MM/YYYY';
 
   const useCompactLayout = useMediaQuery(
     `(max-width: ${BREAKPOINTS.Medium - 1}px)`,
@@ -199,19 +293,35 @@ export const DateRangePicker = ({
 
   const today = moment(todaysDate);
 
-  const dateFormat =
-    getCurrentLocale().toLowerCase() === 'en-us' ? 'MM/DD/YYYY' : 'DD/MM/YYYY';
+  const { setStartDateInput, setEndDateInput, startDateError, endDateError } =
+    useDateRangeValidation({ earliestMoment, latestMoment, dateFormat });
+
+  useLayoutEffect(() => {
+    const startDateInput = document.getElementById(startDateId);
+    startDateInput.setAttribute('aria-describedby', 'start-date-error');
+    setStartDateInput(startDateInput);
+
+    const endDateInput = document.getElementById(endDateId);
+    endDateInput.setAttribute('aria-describedby', 'end-date-error');
+    setEndDateInput(endDateInput);
+  }, [startDateId, endDateId, setStartDateInput, setEndDateInput]);
 
   return (
     // We wrap in a span to assist with scoping CSS selectors & overriding styles from react-dates
-    <span className="c-date-picker">
+    <span
+      className={`c-date-picker${
+        startDateError || endDateError ? ' c-date-picker--error' : ''
+      }`}
+    >
       <ReactDateRangePicker
         startDateId={startDateId}
         startDate={startMoment}
-        startDateAriaLabel={`Start date (${dateFormat})`}
+        startDateAriaLabel={`${
+          startDateAriaLabel ?? 'Start date'
+        } (${dateFormat})`}
         endDate={endMoment}
         endDateId={endDateId}
-        endDateAriaLabel={`End date (${dateFormat})`}
+        endDateAriaLabel={`${endDateAriaLabel ?? 'End date'} (${dateFormat})`}
         startDatePlaceholderText={dateFormat}
         endDatePlaceholderText={dateFormat}
         displayFormat={dateFormat}
@@ -277,6 +387,15 @@ export const DateRangePicker = ({
           />
         )}
       />
+      {/* This hidden input provides information that may be needed by implementing forms to properly parse dates */}
+      <input type="hidden" name="date_format" value={dateFormat} />
+      <div
+        className="c-date-picker__errors crayons-field__description"
+        aria-live="assertive"
+      >
+        <div id="start-date-error">{startDateError}</div>
+        <div id="end-date-error">{endDateError}</div>
+      </div>
     </span>
   );
 };

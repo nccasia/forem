@@ -24,6 +24,10 @@ module Moderator
       Users::DeleteActivity.call(user)
     end
 
+    def delete_user_podcasts
+      Users::DeletePodcasts.call(user)
+    end
+
     def remove_privileges
       @user.remove_role(:workshop_pass)
       remove_mod_roles
@@ -50,7 +54,7 @@ module Moderator
         noteable_id: @user.id,
         noteable_type: "User",
         reason: reason,
-        content: content,
+        content: content || "#{@admin.username} updated #{@user.username}",
       )
     end
 
@@ -64,8 +68,8 @@ module Moderator
       when "Suspended" || "Spammer"
         user.add_role(:suspended)
         remove_privileges
-      when "Moderator"
-        assign_elevated_role_to_user(user, :moderator)
+      when "Super Moderator"
+        assign_elevated_role_to_user(user, :super_moderator)
         TagModerators::AddTrustedRole.call(user)
       when "Good standing"
         regular_member
@@ -95,6 +99,11 @@ module Moderator
       check_super_admin
       remove_negative_roles
       user.add_role(role)
+
+      # Clear cache key if the elevated role matches Rack::Attack bypass roles
+      return unless Rack::Attack::ADMIN_ROLES.include?(role.to_s)
+
+      Rails.cache.delete(Rack::Attack::ADMIN_API_CACHE_KEY)
     end
 
     def check_super_admin

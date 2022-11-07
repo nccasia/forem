@@ -51,6 +51,7 @@ within our community. ❤️
 - [Developer Documentation](#developer-documentation)
 - [Core team](#core-team)
 - [Vulnerability disclosure](#vulnerability-disclosure)
+- [Acknowledgements](#acknowledgements)
 - [License](#license)
 
 ## Community
@@ -122,22 +123,10 @@ Please see our installation guides, such as the
 - [@jessleenyc](https://dev.to/jess)
 - [@peterkimfrank](https://dev.to/peter)
 - [@maestromac](https://dev.to/maestromac)
-- [@zhao-andy](https://dev.to/andy)
 - [@lightalloy](https://dev.to/lightalloy)
-- [@joshpuetz](http://dev.to/joshpuetz)
-- [@juliannatetreault](https://dev.to/juliannatetreault)
 - [@ridhwana](https://dev.to/ridhwana)
 - [@fdoxyz](https://dev.to/fdoxyz)
-- [@msarit](https://dev.to/msarit)
-- [@jdoss](https://dev.to/jdoss)
-- [@cmgorton](https://dev.to/coffeecraftcode)
-- [@andygeorge](https://dev.to/andygeorge)
-- [@phannon716](https://dev.to/phannon716)
-- [@s_aitchison](https://dev.to/s_aitchison)
 - [@rt4914](https://dev.to/rt4914)
-- [@jeremyf](https://dev.to/jeremyf)
-- [@dscottS3](https://dev.to/dscottS3)
-- [@asheren](https://dev.to/asheren)
 - [@jaw6](https://dev.to/jaw6)
 
 ## Vulnerability disclosure
@@ -147,7 +136,7 @@ Forem is the open source software which powers [DEV](https://dev.to).
 We welcome security research on DEV under the terms of our
 [vulnerability disclosure policy](https://dev.to/security).
 
-## Acknowledgments
+## Acknowledgements
 
 Thank you to the [Twemoji project](https://github.com/twitter/twemoji) for the
 usage of their emojis.

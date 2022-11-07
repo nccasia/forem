@@ -148,8 +148,135 @@ describe('<DateRangePicker />', () => {
     expect(endDate.getFullYear()).toEqual(2022);
   });
 
+  it('displays errors on blur if an invalid date is typed', async () => {
+    const { getByRole } = render(
+      <DateRangePicker
+        startDateId="start-date"
+        endDateId="end-date"
+        todaysDate={todayMock}
+        minStartDate={new Date('2022-01-01')}
+        maxEndDate={new Date('2022-01-31')}
+      />,
+    );
+
+    const startDateInput = getByRole('textbox', {
+      name: 'Start date (MM/DD/YYYY)',
+    });
+
+    const endDateInput = getByRole('textbox', {
+      name: 'End date (MM/DD/YYYY)',
+    });
+
+    userEvent.type(startDateInput, 'something');
+    await waitFor(() => expect(startDateInput).toHaveDisplayValue('something'));
+    // Move away from the input to trigger the blur event
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(startDateInput).toHaveAccessibleDescription(
+        'Start date must be in the format MM/DD/YYYY',
+      ),
+    );
+
+    userEvent.type(endDateInput, '12345');
+    await waitFor(() => expect(endDateInput).toHaveDisplayValue('12345'));
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(endDateInput).toHaveAccessibleDescription(
+        'End date must be in the format MM/DD/YYYY',
+      ),
+    );
+  });
+
+  it('displays errors on blur if date is before minimum date', async () => {
+    const { getByRole } = render(
+      <DateRangePicker
+        startDateId="start-date"
+        endDateId="end-date"
+        todaysDate={todayMock}
+        minStartDate={new Date('2022-01-01')}
+        maxEndDate={new Date('2022-01-31')}
+      />,
+    );
+
+    const startDateInput = getByRole('textbox', {
+      name: 'Start date (MM/DD/YYYY)',
+    });
+
+    const endDateInput = getByRole('textbox', {
+      name: 'End date (MM/DD/YYYY)',
+    });
+
+    userEvent.type(startDateInput, '01/22/2020');
+    await waitFor(() =>
+      expect(startDateInput).toHaveDisplayValue('01/22/2020'),
+    );
+    // Move away from the input to trigger the blur event
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(startDateInput).toHaveAccessibleDescription(
+        'Start date must be on or after 01/01/2022',
+      ),
+    );
+
+    userEvent.type(endDateInput, '01/22/2020');
+    await waitFor(() => expect(endDateInput).toHaveDisplayValue('01/22/2020'));
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(endDateInput).toHaveAccessibleDescription(
+        'End date must be on or after 01/01/2022',
+      ),
+    );
+  });
+
+  it('displays errors on blur if date is after maximum date', async () => {
+    const { getByRole } = render(
+      <DateRangePicker
+        startDateId="start-date"
+        endDateId="end-date"
+        todaysDate={todayMock}
+        minStartDate={new Date('2022-01-01')}
+        maxEndDate={new Date('2022-01-31')}
+      />,
+    );
+
+    const startDateInput = getByRole('textbox', {
+      name: 'Start date (MM/DD/YYYY)',
+    });
+
+    const endDateInput = getByRole('textbox', {
+      name: 'End date (MM/DD/YYYY)',
+    });
+
+    userEvent.type(startDateInput, '05/22/2022');
+    await waitFor(() =>
+      expect(startDateInput).toHaveDisplayValue('05/22/2022'),
+    );
+    // Move away from the input to trigger the blur event
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(startDateInput).toHaveAccessibleDescription(
+        'Start date must be on or before 01/31/2022',
+      ),
+    );
+
+    userEvent.type(endDateInput, '05/22/2022');
+    await waitFor(() => expect(endDateInput).toHaveDisplayValue('05/22/2022'));
+    userEvent.tab();
+
+    await waitFor(() =>
+      expect(endDateInput).toHaveAccessibleDescription(
+        'End date must be on or before 01/31/2022',
+      ),
+    );
+  });
+
   it('skips to a selected year', async () => {
-    const { getByRole, getAllByRole } = render(
+    const { getByRole, queryByRole, getAllByRole } = render(
       <DateRangePicker
         startDateId="start-date"
         endDateId="end-date"
@@ -159,16 +286,23 @@ describe('<DateRangePicker />', () => {
       />,
     );
 
+    expect(
+      queryByRole('button', {
+        name: 'Choose Monday, January 25, 2021 as start date',
+      }),
+    ).not.toBeInTheDocument();
+
     // react-dates renders a hidden (by CSS) month/year picker for off screen previous and next month views
-    // testing library doesn't load the CSS, so we have to "skip over" the first matching select to get the correct visible one
+    // testing library doesn't load the CSS, so we need to skip the first "hidden" select
     const startYearPicker = getAllByRole('combobox', {
       name: 'Navigate to year',
     })[1];
-    expect(startYearPicker).toHaveDisplayValue('2022');
     userEvent.selectOptions(
       startYearPicker,
       within(startYearPicker).getByRole('option', { name: '2021' }),
     );
+
+    await waitFor(() => expect(startYearPicker).toHaveDisplayValue('2021'));
 
     await waitFor(() =>
       expect(
@@ -180,7 +314,7 @@ describe('<DateRangePicker />', () => {
   });
 
   it('skips to a selected month', async () => {
-    const { getByRole, getAllByRole } = render(
+    const { queryByRole, getByRole, getByDisplayValue } = render(
       <DateRangePicker
         startDateId="start-date"
         endDateId="end-date"
@@ -190,18 +324,23 @@ describe('<DateRangePicker />', () => {
       />,
     );
 
+    expect(
+      queryByRole('button', {
+        name: 'Choose Wednesday, April 6, 2022 as start date',
+      }),
+    ).not.toBeInTheDocument();
+
     // react-dates renders a hidden (by CSS) month/year picker for off screen previous and next month views
-    // testing library doesn't load the CSS, so we have to "skip over" the first matching select to get the correct visible one
-    const startMonthPicker = getAllByRole('combobox', {
-      name: 'Navigate to month',
-    })[1];
-    expect(startMonthPicker).toHaveDisplayValue('January');
-    userEvent.selectOptions(startMonthPicker, 'February');
+    // testing library doesn't load the CSS, so we grab the correct picker by displayValue rather than role/name
+    const startMonthPicker = getByDisplayValue('January');
+
+    userEvent.selectOptions(startMonthPicker, 'April');
+    await waitFor(() => expect(startMonthPicker).toHaveDisplayValue('April'));
 
     await waitFor(() =>
       expect(
         getByRole('button', {
-          name: 'Choose Wednesday, February 2, 2022 as start date',
+          name: 'Choose Wednesday, April 6, 2022 as start date',
         }),
       ).toBeInTheDocument(),
     );

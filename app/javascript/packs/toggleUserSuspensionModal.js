@@ -10,7 +10,7 @@ const suspendOrUnsuspendUser = async ({
   btnAction,
   userId,
   username,
-  suspendOrUnsuspendReason,
+  actionReason,
 }) => {
   event.preventDefault();
   closeModal();
@@ -23,7 +23,7 @@ const suspendOrUnsuspendUser = async ({
         body: JSON.stringify({
           id: userId,
           user: {
-            note_for_current_role: suspendOrUnsuspendReason,
+            note_for_current_role: actionReason,
             user_status: btnAction == 'suspend' ? 'Suspended' : 'Good standing',
           },
         }),
@@ -78,7 +78,6 @@ function closeModal() {
   closeWindowModal(window.parent.document);
 }
 
-// let modalContents;
 const modalContents = new Map();
 
 /**
@@ -131,7 +130,7 @@ function activateModalSubmitBtn() {
   unsuspendBtn?.addEventListener('click', checkReason);
 }
 
-export function toggleModal(event) {
+export function toggleSuspendUserModal(event) {
   event.preventDefault;
   const { modalTitle, modalSize, modalContentSelector } = event.target.dataset;
   showWindowModal({
